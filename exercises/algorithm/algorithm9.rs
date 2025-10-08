@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -38,6 +37,17 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.count += 1;
+        self.items.push(value);
+        let mut cur_idx = self.count;
+        let mut par_idx = cur_idx / 2;
+        while par_idx >= 1 {
+            if (self.comparator)(&self.items[cur_idx], &self.items[par_idx]) {
+                self.items.swap(cur_idx, par_idx)
+            }
+            cur_idx = par_idx;
+            par_idx /= 2;
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -85,7 +95,67 @@ where
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+		if self.is_empty() {
+            return None;
+        }
+        else {
+            let res = self.items.swap_remove(1);
+            self.count -= 1;
+            let mut cur_idx = 1;
+            let mut cl_idx = cur_idx * 2;
+            let mut cr_idx = cl_idx + 1;
+            loop {
+                if cl_idx <= self.len() && cr_idx <= self.len() {
+                    match ((self.comparator)(&self.items[cur_idx], &self.items[cl_idx]),
+                           (self.comparator)(&self.items[cur_idx], &self.items[cr_idx])) {
+                        (true, true) => break,
+                        (true, false) => {
+                            self.items.swap(cur_idx, cr_idx);
+                            cur_idx = cr_idx;
+                            cl_idx = cur_idx * 2;
+                            cr_idx = cl_idx + 1;
+                        },
+                        (false, true) => {
+                            self.items.swap(cur_idx, cl_idx);
+                            cur_idx = cl_idx;
+                            cl_idx = cur_idx * 2;
+                            cr_idx = cl_idx + 1;
+                        },
+                        (false, false) => {
+                            if(self.comparator)(&self.items[cl_idx], &self.items[cr_idx]) {
+                                self.items.swap(cur_idx, cl_idx);
+                                cur_idx = cl_idx;
+                                cl_idx = cur_idx * 2;
+                                cr_idx = cl_idx + 1;
+                            }
+                            else {
+                                self.items.swap(cur_idx, cr_idx);
+                                cur_idx = cr_idx;
+                                cl_idx = cur_idx * 2;
+                                cr_idx = cl_idx + 1;
+                            }
+                        },
+                    }                    
+                }
+                else if cl_idx > self.len() && cr_idx > self.len() {
+                    break;
+                }
+                else {
+                    if cl_idx <= self.len() {
+                        match (self.comparator)(&self.items[cur_idx], &self.items[cl_idx]) {
+                            true => {
+                                cur_idx = cl_idx;
+                                cl_idx = cur_idx * 2;
+                                cr_idx = cl_idx + 1;
+                            },
+                            false => break,
+                        }
+                    }
+                }
+
+            }
+            return Some(res);
+        }
     }
 }
 
@@ -129,6 +199,7 @@ mod tests {
         heap.add(2);
         heap.add(9);
         heap.add(11);
+        assert_eq!(heap.items, vec![0, 2, 4, 9, 11]);
         assert_eq!(heap.len(), 4);
         assert_eq!(heap.next(), Some(2));
         assert_eq!(heap.next(), Some(4));
